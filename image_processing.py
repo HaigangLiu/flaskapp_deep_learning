@@ -32,7 +32,10 @@ class SingleImageHandler():
         self._register()
 
     def _register(self):
-
+        '''
+        Registering a hook is to force pytorch remember the output
+        from each layer otherwise it will be flushed out.
+        '''
         def forward_recorder(module, input, output):
             self.feature_maps = output.data.cpu()
 
@@ -55,7 +58,6 @@ class SingleImageHandler():
             return None
 
     def process_one_image(self, image_tensor):
-
         self.image_numpy = image_tensor[0].numpy().transpose(1,2,0)
         mean = np.array([0.485, 0.456, 0.406])
         std = np.array([0.229, 0.224, 0.225])
@@ -85,7 +87,8 @@ class SingleImageHandler():
         assert self.length_of_filter == channels, "Number of filter does not match gradient dimension"
         gradient_average.resize_(channels) # lots of squeeze
 
-        self.gradient_CAM = torch.FloatTensor(self.size_of_feature_maps, self.size_of_feature_maps).zero_() # 7 by 7 probably
+        self.gradient_CAM = torch.FloatTensor(self.size_of_feature_maps,
+                                        self.size_of_feature_maps).zero_() # 7 by 7 probably
         for feature_map, weight in zip(self.feature_maps, gradient_average):
                 self.gradient_CAM = self.gradient_CAM + feature_map * weight.data
 
@@ -107,14 +110,15 @@ class SingleImageHandler():
         gradient_CAM = (combined_image/combined_image.max())*255
 
         matplotlib.rcParams['axes.linewidth'] = 0.1
+        plt.rcParams['savefig.dpi'] = 300
         fig = plt.figure()
         ax1 = fig.add_subplot(1, 2, 1)
         ax1.imshow(self.image_numpy)
         ax2 = fig.add_subplot(1, 2, 2)
-        ax2.imshow((gradient_CAM/255))
+        ax2.imshow(gradient_CAM/255)
 
-        fig.savefig(out_dir, bbox_inches="tight", pad_inches= 0.2, dpi=300)
-        plt.close()
+        fig.savefig(out_dir, bbox_inches="tight", pad_inches= 0.2)
+        plt.close('all')
 
     def run(self, in_image, out_image):
         '''
@@ -122,12 +126,11 @@ class SingleImageHandler():
             in_image(str): path to image, ends with .png or jpg or jpeg
             out_image(str): path to save new image. ends with png.
         '''
-
         image = Image.open(in_image).convert('RGB')
         transform_ops = transforms.Compose([transforms.Resize(256),
-                         transforms.CenterCrop(224),
-                         transforms.ToTensor(),
-                         transforms.Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])])
+                        transforms.CenterCrop(224),
+                        transforms.ToTensor(),
+                        transforms.Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])])
 
         single_pic = transform_ops(image).unsqueeze(0) #add one more dim
         self.process_one_image(single_pic).find_gradient_CAM().save(out_dir = out_image)
