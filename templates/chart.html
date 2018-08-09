@@ -1,26 +1,17 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+{% extends "layout.html" %}
+{% block head %}
+
 <script>
 window.onload = function () {
 
 var chart = new CanvasJS.Chart("chartContainer", {
     animationEnabled: true,
-
-    // title:{
-    //     text:"Prevalence/Disease burden"
-    // },
     axisX:{
         interval: 1
     },
     axisY2:{
         interlacedColor: "rgba(1,77,101,.2)",
         gridColor: "rgba(1,77,101,.1)",
-        // title: "Number of Positive Cases"
     },
     data: [{
         type: "bar",
@@ -31,8 +22,8 @@ var chart = new CanvasJS.Chart("chartContainer", {
             { y: {{agg_stats[0]}}, label: "Atelectasis" },
             { y: {{agg_stats[1]}}, label: "Cardiomegaly" },
             { y: {{agg_stats[2]}}, label: "Effusion" },
-            { y: {{agg_stats[3]}}, label: "Pneumonia" },
-            { y: {{agg_stats[4]}}, label: "Pneumothorax" },
+            { y: {{agg_stats[3]}}, label: "Pneumonia"},
+            { y: {{agg_stats[4]}}, label: "Pneumothorax"},
             { y: {{agg_stats[5]}}, label: "Nodule" },
             { y: {{agg_stats[6]}}, label: "Infiltrate" },
             { y: {{agg_stats[7]}}, label: "Consolidation" },
@@ -47,36 +38,19 @@ var chart = new CanvasJS.Chart("chartContainer", {
 chart.render();
 }
 </script>
-</head>
-<body>
-    <header class="site-header">
-      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
-        <div class="container">
-          <a class="navbar-brand mr-4" href="/">Machine Learning App for CXR</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarToggle">
-            <div class="navbar-nav mr-auto">
-              <!-- <a class="nav-item nav-link" href="/"></a> -->
-
-            </div>
-            <!-- Navbar Right Side -->
-            <div class="navbar-nav">
-              <a class="nav-item nav-link" href={{ url_for('learn_more') }}>More About This Project</a>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </header>
-
-
+{% endblock head %}
+{% block content%}
 
 <div class = 'container'>
     <h1 class = 'mb-4'>Aggregated results </h1>
     <BIG>
         <p>
-            The following chart summaries the numeber of positive cases in each of category based on the given data and a threshold of 0.5. For instance, a certain patient with predicted probability of pneumonia 0.56 will be counted as a positive case for the pneumonia group. Based on this result, we can have a rough estimate of prevalance of a certain disease in the population.
+            The following chart summaries the numeber of positive cases in each
+            of category based on the given data and a threshold of 0.5. For instance,
+            a certain patient with predicted probability of pneumonia 0.56 will
+            be counted as a positive case for the pneumonia group. Based on this
+            result, we can have a rough estimate of prevalance of a certain
+            disease in the population.
         </p>
     </BIG>
     </div>
@@ -89,8 +63,4 @@ chart.render();
 </div>
 
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-</body>
-</html>
+{% endblock content%}
