@@ -2,12 +2,11 @@
 {% block content %}
     <div class = 'container'>
         <h1 class = 'display-4 mb-3 muted'>A deep learning app for CXR reading</h1>
-        <p> <BIG>This deep learning app is designed to streamline the Chest X-ray reading process. To get diagnosis based on Chest X-ray (CXR), users can either upload a single image or a zip file of multiple images. In the former use case, we will not only give a numerical probability with state-of-the-art accuracy<sup>1</sup>, but also a heat map indicates where the pathology is likely to be<sup>2</sup>. </BIG></p>
+        <p> <BIG>This deep learning app is designed to streamline the Chest X-ray reading process. To get diagnosis based on Chest X-ray (CXR), users can either upload a single image or a zip file of multiple images. In the former use case, we will not only give a numerical probability with state-of-the-art accuracy <a href="{{url_for("result_report_comparison")}}">(read more)</a> , but also a heat map indicates where the pathology is likely to be<sup>2</sup>. </BIG></p>
 
          <p> <BIG>On the other hand, by leveraging the power of GPU<sup>3</sup>, we can process a large amount of images rather efficiently. User can compress multiple images into a zip file and we will take it from there. Unlike the single image case, user is  required to submit a file (csv or txt) recording the ground truth so that we can perform in-depth analysis.<sup>4</sup>.</BIG></p>
         <hr>
     </div>
-
 
 <div class="container mb-5">
 
@@ -52,10 +51,10 @@
 
     <div class = "container mb-5" >
         <ol class>
-            <li> The best result in binary/multiple classification is published by Rajpurkar et al(2017). See Rajpurkar, Pranav, et al. "Chexnet: Radiologist-level pneumonia detection on chest x-rays with deep learning." arXiv preprint arXiv:1711.05225 (2017). After a few modifications, our algorithm outperforms Rajpurkar's in three categories.</li>
+            <li> The best result in binary/multiple classification is published by Rajpurkar et al.(2017). See Rajpurkar, Pranav, et al. "Chexnet: Radiologist-level pneumonia detection on chest x-rays with deep learning." arXiv preprint arXiv:1711.05225 (2017). After a few adjustments (e.g. 10 crop and data augmentation), our algorithm outperforms Rajpurkar's in three categories.</li>
             <li>The gradient-weighted class activation map is implemented based on the paper by Ramprasaath et al (2016). This method utilizes backprop gradients as weights and yields more informative localization. See Selvaraju, Ramprasaath R., et al. "Grad-CAM: Visual Explanations from Deep Networks via Gradient-Based Localization." ICCV. 2017.</li>
             <li>GPU: graphical processing unit. Highly recommended for optimal speed.</li>
-            <li>Images will be deleted after running the algorithm.</li>
+            <li>By design of this web app, images will be deleted every time we run a new session and user data will not be retained on our server.</li>
         </ol>
     </div>
 
