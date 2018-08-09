@@ -11,7 +11,6 @@ from forms import OneImageForm, MultipleImagesForm
 from helper_function import translate_result_to_English, generate_bar_chart, class_dict
 from image_processing import SingleImageHandler
 
-
 model_dict = {'DenseNet121': ['static/models/densenet121_multilabel.pth.tar',
                               'features.denseblock4.denselayer16.conv2'],
               'ResNet152': ['static/models/resnet152_multilabel.pth.tar',
@@ -21,8 +20,9 @@ app = Flask(__name__)
 db = SQLAlchemy(app)
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-UPLOAD_FOLDER = '/Users/haigangliu/'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+accepted_files = ('jpg', 'png', 'jpeg')
+# UPLOAD_FOLDER = '/Users/haigangliu/'
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 class ImagesDB(db.Model):
 
@@ -40,22 +40,26 @@ class ImagesDB(db.Model):
 def intropage():
     return render_template('intropage.html', title = 'Machine Learning Project')
 
-@app.route('/result_panel',methods = ['POST'])
+@app.route('/result_panel', methods = ['POST'])
 def result_panel():
-    return render_template('result_panel.html', title = 'A panel of multiple result')
+    return render_template('result_panel.html',
+                           title = 'A panel of CXR reading result')
 
 @app.route("/chart", methods = ['POST'])
 def chart():
-    return render_template('chart.html', values= values, labels= labels)
+    return render_template('chart.html',
+                            values= values,
+                            labels= labels,
+                            title = 'Aggregated statistics')
 
 @app.route('/single_image_handler', methods=['POST', 'GET'])
 def single_image_handler():
     #clean up the folder first
-    image_folder = os.path.join(app.root_path,'static/images/')
-    image_folder_generated =  os.path.join(app.root_path,'static/generated_images/')
+    image_folder = os.path.join(app.root_path,'static/single_image/images/')
+    image_folder_generated =  os.path.join(app.root_path,'static/single_image/generated_images/')
 
     for folder in [image_folder, image_folder_generated]:
-        filelist = [ f for f in os.listdir(folder) if f.endswith(('png', 'jpg', 'jpeg')) ]
+        filelist = [ f for f in os.listdir(folder) if f.endswith(accepted_files) ]
         for f in filelist:
             os.remove(os.path.join(folder, f))
 
@@ -77,8 +81,7 @@ def single_image_handler():
         ordered_output_probs = list(np.argsort(pred)[-3:])
         disease_w_highest_prob = [translate_result_to_English(i) for i in ordered_output_probs]
 
-        barchart_dir =  os.path.join('static/generated_images/', 'bar_chart_' +
-        file_name)
+        barchart_dir =  os.path.join('static/single_image/generated_images/', 'bar_chart_' + file_name)
         generate_bar_chart(pred, barchart_dir)
 
         return render_template('resultpage_single.html',
@@ -115,7 +118,7 @@ def multiple_images_handler_beta():
         db.create_all()
 
         for file in os.listdir(image_storage):
-            if file.endswith(('jpg', 'png', 'jpeg')):
+            if file.endswith(accepted_files):
                 imageID =  image_storage + file
                 heatmapID = heatmap_storage + file
 
@@ -140,18 +143,23 @@ def multiple_images_handler_beta():
         agg_stats = mask.sum(axis = 0).values
         return render_template('chart.html', agg_stats = agg_stats)
 
-    return render_template('multiple_image_handler_beta.html', title =
-        'Analyze multiple images', form = form)
+    return render_template('multiple_image_handler_beta.html',
+                            title ='Analyze multiple images', form = form)
+
+@app.route('/result_report_comparison')
+def result_report_comparison():
+    return render_template('resultpage_multiple.html')
 
 @app.route('/to_panel', methods=['POST', 'GET'])
 def to_panel():
     page = request.args.get('page', 1, type = int)
     posts = ImagesDB.query.paginate(page = page, per_page = 4)
-    return render_template('result_panel.html', posts = posts )
+    return render_template('result_panel.html', posts = posts, title = 'A panel of CXR reading result')
 
 @app.route('/learn_more')
 def learn_more():
     return render_template('learn_more.html')
+
 
 @app.route('/tut1')
 def tut1():
