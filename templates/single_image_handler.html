@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class = 'container'>
+        <h1>Analyze an image</h1>
+         <p> <BIG>Please make sure the image is square size since the algorithm will perform worse for warped images. </BIG></p>
+    </div>
+    <div class="container">
+        <form method=post enctype=multipart/form-data action="">
+            {{ form.hidden_tag()}}
+            <fieldset class="form-group">
+                <div class="form-group">
+                    {{ form.image.label(class="form-control-label") }}
+                    {% if form.image.errors %}
+                        {{ form.image(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.image.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{form.image(class="form-control form-control-lg")}}
+                    {% endif %}
+                </div>
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+{% endblock content %}

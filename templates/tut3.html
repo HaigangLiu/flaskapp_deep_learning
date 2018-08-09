@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class = 'container mb-4'>
+<h1 class = 'display-4 mb-4'>{{title}} </h1>
+
+<p class="p1">Data augmentation is a pretty simple and effective idea to handle imbalanced data. The idea is to give the minority group a boost by generating more of them and feed to the algorithm.</p>
+
+<p class="p1">Most of the techniques of data augmentation in computer vision is as simple as flipping the image, which does not make much of a difference for human eyes but it might be totally different images for computers since they only see numbers. This exploits the difference of how human and computers are thinking. The implementation, on the other hand, can sometimes be kind of a hassle. This article is presenting a relatively painless path to do it in PyTorch.</p>
+<p class="p1">The path is to find the minority class, augment it, make it a dataset object and concatenated it to the original dataset. The labeling is simple since all of the them are from the same minority class. If you got multi-category, just apply the aforementioned procedure to all the minority classes that needs augmentation.</p>
+The following flow chart might give you some idea.
+
+<div class ='container align-center'>
+<img class="alignnone size-full wp-image-56" src="https://pythonzeal.files.wordpress.com/2018/07/screen-shot-2018-07-06-at-4-09-27-pm.png" alt="Screen Shot 2018-07-06 at 4.09.27 PM.png" width="800" height="400" />
+</div>
+
+<p class="p1">Thanks to a third party API <code>Augmentor</code>, which only requires you to supply a path of images. It has got a few augmentation choices built-in e.g. flipping or zoom or change contrast. The last one, among others, might require some certain image formats to work, but the flipping and zooming kind of work everywhere.</p>
+However, this API asks for a path to a folder in which images are held. However, we only need to augment the positive images who are now mixed with other negative images, in which case you might need to write a helper function to filter the positive images and keep them in one place. A quick word of advice is to write a tear down function when you playing with this kind of functions otherwise you disk will be filled up pretty quickly.
+That's all you need for an Augmentor Pipeline: provide a path to images and specify the name of operations.
+
+Next up, you have create a new dataset object based these new images. The idea is to simply follow the PyTorch DataSet template. The following template snippet is from the official guide of PyTorch. After creating the dataset object, you can simply glue the original training dataset with the one you just made by <code class="descclassname">torch.utils.data.</code><code class="descname">ConcatDataset</code><code>([old, new])</code>.
+<pre><span class="k">class</span> <span class="nc">FaceLandmarksDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csv_file</span><span class="p">,</span> <span class="n">root_dir</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            csv_file (string): Path to the csv file with annotations.</span>
+<span class="sd">            root_dir (string): Directory with all the images.</span>
+<span class="sd">            transform (callable, optional): Optional transform to be applied</span>
+<span class="sd">                on a sample.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">landmarks_frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_dir</span> <span class="o">=</span> <span class="n">root_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">landmarks_frame</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="n">img_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_dir</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">landmarks_frame</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">img_name</span><span class="p">)</span>
+        <span class="n">landmarks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">landmarks_frame</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+        <span class="n">landmarks</span> <span class="o">=</span> <span class="n">landmarks</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float'</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'image'</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s1">'landmarks'</span><span class="p">:</span> <span class="n">landmarks</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">:</span>
+            <span class="n">sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sample</span></pre>
+
+<h2 class="p1">Some Caveats:</h2>
+<p class="p1">Data augmentation can <em>only</em> be done on the training set and test seperately. More specifically, we can only do this <em>after</em> determining the train test split. Otherwise, due to the fact that the rotated image might be similar to original one, our algorithm would be able to cheat if one lives in training set while the other in the test set. A common way to do data augmentation in test set is called ten-crop, which is to generate 10 different cropped versions of original image, and average the prediction of each copy to get the final prediction.</p>
+<p class="p1">If you are following my scheme closely, you might get an <code>AtttributeError</code> when you are trying to access the <code>label</code> attribute from the combined dataset. This is the combined dataset is not a "real" dataset object. You need to call <code>new_data.datasets[0].label</code>. The concatenated function is just a wrapper but not really melting these two into one under the hood. You still have to call them separately sometimes.</p>
+<p class="p1">One more thing about the dataset class. One need to make sure in the template of making the dataset, the second special method, <code>__get_item__()</code>, requires the absolute complete path not just the name of image. Not doing so might give you headache later.</p>
+{% endblock content %}

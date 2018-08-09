@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class = 'container mb-4'>
+<h1 class = 'display-4 mb-4'>{{title}} </h1>
+
+
+This problem includes two aspects, both of which are quite fun. First, how to visualize a convolutional neural network when it contains fully connected layers. Second, how to do it in PyTorch? Because of how PyTorch works, implementing gradient-weighted CAM needs some tweaks.
+
+First of all, what is gradient-weighted CAM? It is basically a visualization tool to help us to figure out what the neural network is looking at. Here is the end result.
+
+<div class = 'row'>
+    <div class = 'col'></div>
+    <div class = 'col mt-4'>
+    <img class="  wp-image-44 aligncenter" src="https://pythonzeal.files.wordpress.com/2018/07/screen-shot-2018-06-27-at-8-19-52-pm.png" alt="Screen Shot 2018-06-27 at 8.19.52 PM.png" width="400" height="200" />
+    </div>
+    <div class = 'col'></div>
+</div>
+
+How to do it? First step is to retrieve the feature map after the last convolutional layer. You can get this just by poking into the network structure. It's not much digging work to do since you are only looking for the last layer. Alternatively, we can do this by calling <code>.named_modules()</code> method, which is more dynamic. This function returns a generator. Looping the generator gives us two lists: the modules and the name of the modules. Let's take ResNet18 for example.
+<pre class = 'mt-4'>model_ft = models.resnet18(pretrained=True)
+names = []
+for name, module in:
+    names.append(name)</pre>
+And you get a list like this (some layers in the middle are omitted):
+<pre  class = 'mt-4'>['',
+ 'conv1',
+ 'bn1',
+ 'relu',
+ 'maxpool',
+ 'layer1',
+ 'layer1.0',
+ 'layer1.0.conv1',
+ 'layer1.0.bn1',
+ ... ...
+ 'layer4.1.conv1',
+ 'layer4.1.bn1',
+ 'layer4.1.relu',
+ 'layer4.1.conv2',
+ 'layer4.1.bn2',
+ 'avgpool',
+ 'fc']</pre>
+Obviously the last conv layer is called 'layer4.1.conv2'.
+
+Next steps:
+<ol>
+    <li>Train the neural network like we usually do, cache it.</li>
+    <li>Find a new image, pass it to the trained network.</li>
+    <li>Record the output of 'layer4.1.conv2' in both forward pass and backward pass.</li>
+    <li>Get a weighted average of forward pass in which gradients are used as weights.</li>
+</ol>
+The key point is that we want some intermediate step in the neural network, and thus we have to understand how PyTorch is storing the data.
+
+You might wonder, wait, we have <code>.state_dict()</code> right? Not exactly. State dictionary only stores the <em>parameters</em> at a certain step, like the 3 x 3 filters or  5 x 5 filters. However, what we want to retrieve is how the image looks like after passing through the filter, which is, understandably, destroyed after each pass to save space.
+
+The workaround is to create a hook function. You can have different interpretation of this design but from my point of view it is more like a decorator. For one thing, it is something we do to change the behavior of an existing function. For another, we got to pass in a function as an argument. That is exactly what decorator means to me. Anyways, let's see one example.
+<pre  class = 'mt-4'>NAME = 'layer4.1.conv2'
+list_forward = []
+list_backward = []
+
+def forward_recorder(module, input, output):
+    list_forward.append(output.data.cpu())
+
+def backward_recorder(module, grad_in, grad_out):
+    list_backward.append(grad_out[0].data.cpu())
+
+for i, j in model_ft.named_modules():
+    if i == NAME:
+        j.register_forward_hook(forward_recorder)
+        j.register_backward_hook(backward_recorder)</pre>
+The forward and backward hook function is only to copy the data into a list so that we can use later. We can do that to every layer, but we are only interested in <code>'layer4.1.conv2'</code>.
+
+Let's pass in the image now. After that, we should see something in the forward list but nothing in the backward.
+<pre class = 'mt-4'>one_image_tensor, label = next(iter(train_loader))
+one_image_numpy = one_image_tensor.squeeze(0).numpy().transpose(1,2,0)
+output = model_ft(one_image_tensor)
+print(output) #tensor([[ 2.5757, -1.8713]], grad_fn=)
+print(list_in[0].size()) #torch.Size([1, 512, 7, 7])
+print(len(list_grad_out)) # 0</pre>
+Some Comments:
+<ol>
+    <li>The image to be processed in CNN has to be tensor type. But in order to plot it with functions like <code>imshow</code> in <code>matplotlib</code> module, numpy array is a better choice. And that's why I prepared a numpy version of the raw image in the beginning.</li>
+    <li>Numpy and PyTorch ask for different dimension typically. <code>imshow</code> generally requires 3D data, and the 3rd dimension is the number of channels, like 1 (grey scale), 3 (RGB) or 4 (CMYK). However, the dimesion for PyTorch is like 1x3x224x224 where the first dimension is the batch size. And that's why you see something like .squeeze everywhere in the PyTorch code.</li>
+    <li>Now I guess you can understand why in the dataloader object, I set batch_size to 1. Doing so makes squeeze and unsqueeze much easier.</li>
+    <li>The output size from the hook function is 512 x 7 x 7 which is what we thought it should be. If you look at the fine print of model setup, the filter expects a matrix of 512 channels and outputs something with the identical shape.</li>
+</ol>
+To wrap this up, we need the average of these 512 feature maps. Next, we have to compute the gradients in order to get the weights. Don't forget that at this moment, our backward list is still empty. To fill it with gradients, do this.
+<pre  class = 'mt-4'> output.backward(torch.tensor([1.0, 0.0]).unsqueeze(0),retain_graph = True )</pre>
+torch.tensor([1.0, 0.0]) in this case is the prediction based on the output. Here's a helper function to do this.
+<pre  class = 'mt-4'>def one_hot_encoder(outptut):
+    _, argmx = torch.max(output,1)
+    one_hot = torch.FloatTensor(1, output.size()[-1]).zero_()
+    one_hot[0][argmx] = 1.0
+    return one_hot</pre>
+For now, the backward list should not be empty now.
+<pre  class = 'mt-4'>list_grad_out[0].size() #torch.Size([1, 512, 7, 7])</pre>
+Next, compute the sums of along the 512 axis and these 512 numbers will be weights. There's a zillion of ways to do it, but I find the following way pretty interesting.
+<pre  class = 'mt-4'>def weights_calculator(grads):
+    #normalize the weights first
+    grads = grads/(torch.sqrt(torch.mean(torch.pow(grads, 2))) + 1e-5)
+    return nn.AvgPool2d(grads.size()[2:])(grads)</pre>
+The average pooling method, with the kernel of the same size with input, is used to calculate the mean for each layer. Hence, we now have a vector with 512 weights. The second line is simply squeezing out all the unwanted dimensions.
+<pre  class = 'mt-4'>weights = weights_calculator(gradient)
+weights.resize_(weights.size()[1])</pre>
+We next use the feature maps to multiple the corresponding weights and add them up.
+<pre class = 'mt-4'>feature_map = feature_map.squeeze(0)
+gcam = torch.FloatTensor(MAP_SIZE).zero_()
+for fmap, weight in zip(feature_map, weights):
+    gcam = gcam + fmap * weight.data</pre>
+Here's another fun fact of tensor. For the feature map with 512x7x7 dimension, if we treat it like an iterator, it will give us 512 objects and each of them is a 7x7 matrix. Here gcam is a tensor of size 7x7.
+
+Finally, after scaling back the image and rescale the 7x7 image into 224 by 224, we can plot them out. Here is the original picture and the heat map side by side. The ResNet is doing an impressive job overall. For instance, it can tell butterfly from the bees and pinpoint where the bee is at.
+<div class = 'row'>
+    <div class = 'col'></div>
+    <div class = 'col'>
+    <img class="  wp-image-42 aligncenter" src="https://pythonzeal.files.wordpress.com/2018/06/screen-shot-2018-06-27-at-8-19-27-pm.png" alt="Screen Shot 2018-06-27 at 8.19.27 PM.png" width="318" height="181" />
+    </div>
+    <div class = 'col'></div>
+</div>
+
+It can also figure out the contour of ants. Here is the one you see in the beginning.
+<div class = 'row'>
+    <div class = 'col'></div>
+    <div class = 'col'>
+    <img class="  wp-image-43 aligncenter" src="https://pythonzeal.files.wordpress.com/2018/06/screen-shot-2018-06-27-at-8-19-52-pm.png?w=820" alt="Screen Shot 2018-06-27 at 8.19.52 PM.png" width="320" height="179" />
+    </div>
+    <div class = 'col'></div>
+</div>
+
+
+I can keep going all day. And believe me, I did. But let's first see some cases in which the algorithm misses the target.
+
+<div class = 'row'>
+    <div class = 'col'></div>
+    <div class = 'col'>
+    <img class="aligncenter  wp-image-41" src="https://pythonzeal.files.wordpress.com/2018/06/screen-shot-2018-06-27-at-3-54-57-pm.png?w=892" alt="Screen Shot 2018-06-27 at 3.54.57 PM.png" width="340" height="177" />
+    </div>
+    <div class = 'col'></div>
+</div>
+
+
+
+Knowing that it's just matrix operations behind of these, I know that machines cannot take over humans, but seeing these localization maps in person, I still feel this is kind of magical.
+ {% endblock content %}

@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class = 'container'>
+        <h1>Project Overview</h1>
+        <BIG>
+            <p>
+             This deep learning project aims to use state-of-the-art machine learning algorithm to help lung disease detection(bacterial pneumonia in particular) and thus accelerate the development of vaccine.
+             </p>
+             <p>
+             Several algorithms have been tested and two of them are supported in this app under the hood: InceptionV3 and DenseNet 121. The model selection is based on the ROC score on the test set. However, users are not confined to these two models and can upload their own. A detailed manual to do this can be found <a href="#">here</a>.
+             </p>
+             <p>
+              In the meantime, we wish more developers will be involved in developing deep learning projects and application. In this spirit, the following section will be devoted as a tutorial compiliation  to walk interested users through the implementation of this project. This tutorial series will be mostly leveraging two modern Python frameworks, Pytorch (used as the backend to train and test models) and Flask (used as the front end for web application). Any contributions are welcomed.
+              </p>
+        </BIG>
+
+    </div>
+
+    <div class = 'container'>
+        <hr class = 'mt-4'>
+        <h4>Tutorial Series </h4>
+        <div class= 'table'>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Topic</th>
+<th>Abstract</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>PyTorch</td>
+<td><a href= {{url_for('tut1')}}>Implement a simple regression with PyTorch</a> </td>
+<td>Showcase the model training process with a simple linear model</td>
+</tr>
+<tr>
+<td>PyTorch</td>
+<td><a href= {{url_for('tut2')}}> CNN design basics and implementation</a> </td>
+<td>Reimplement LeNet (LeCunn 1998) to show how to build a full fledged CNN.</td>
+</tr>
+<tr>
+<td>PyTorch</td>
+<td><a href= {{url_for('tut3')}}> A practical way of data augmentation: Augmentor</a> </td>
+<td>Show case how to do random flipping, rotating, even adjust brightness.</td>
+</tr>
+<tr>
+<td>PyTorch</td>
+<td><a href= {{url_for('tut4')}}> How ReLU works and what&#39;s Guided Backprop</a> </td>
+<td>A deeper understanding of how ReLU works within the context of computation graph.</td>
+</tr>
+<tr>
+<td>PyTorch</td>
+<td><a href= {{url_for('tut5')}}> Gradient CAM: Into the mind of machine</a> </td>
+<td>A visualization framework based on feature maps retrieval and back propogation.</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+    </div>
+
+
+{% endblock content %}

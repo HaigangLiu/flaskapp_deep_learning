@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-sm-6">
+    <h1>Report of Findings</h1>
+    <BIG>
+            <p> This algorithm looks into 14 different lung diseases and evaluates the likelihood for each category based on the input image. The three most likely categories are <b> {{largest_three_cat[2]}}</b>, <b>{{largest_three_cat[1]}}</b> and <b>{{largest_three_cat[0]}}</b>.
+            </p>
+            <p>
+             Besides, an image of localization is also generated to reflect the likely pathology area for {{largest_three_cat[2]}}, the disease with the highest probability.
+            </p>
+            <p  class = 'mb-5'>The bar chart gives the probability for each category, and as a rule of thumb, if none of these probabilities goes beyond 0.5, we consider this as a normal case. Or, a patient with  multiple significant labels is also not uncommon.
+            </p>
+     </BIG>
+
+    <p><a href="{{ url_for('single_image_handler') }}"> <button type="button" class="btn btn-secondary btn-lg">Try another image</button> </a>
+    </p>
+
+    </div>
+
+    <div class="col-sm-6">
+        <img class = 'border' src= {{image_location_1}} width="500" height="250">
+        <img class = 'border' src= {{image_location_2}} width="500">
+    </div>
+</div>
+</div>
+
+
+{% endblock content %}

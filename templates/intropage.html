@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class = 'container'>
+        <h1 class = 'display-4 mb-3 muted'>A deep learning app for CXR reading</h1>
+        <p> <BIG>This deep learning app is designed to streamline the Chest X-ray reading process. To get diagnosis based on Chest X-ray (CXR), users can either upload a single image or a zip file of multiple images. In the former use case, we will not only give a numerical probability with state-of-the-art accuracy<sup>1</sup>, but also a heat map indicates where the pathology is likely to be<sup>2</sup>. </BIG></p>
+
+         <p> <BIG>On the other hand, by leveraging the power of GPU<sup>3</sup>, we can process a large amount of images rather efficiently. User can compress multiple images into a zip file and we will take it from there. Unlike the single image case, user is  required to submit a file (csv or txt) recording the ground truth so that we can perform in-depth analysis.<sup>4</sup>.</BIG></p>
+        <hr>
+    </div>
+
+
+<div class="container mb-5">
+
+        <div class="row">
+            <div class="col mr-5" ><img height= '270'  src="static/scheme1c.png"/>
+            </div>
+            <div class= 'col mt-4'>
+                    <h1 class = 'mb-4'>Single Image Mode</h1>
+                <p class = 'mt-4'>
+                <a href="{{ url_for('single_image_handler') }}"> <button type="button" class="btn btn-primary btn-lg btn-block">Analyze a single image</button>
+                </a>
+                </p>
+
+                <p class="text-muted mb-0" >Don't have images yet?</p>
+                <p><a href= 'static/sample_images_for_downloading/effusion.png' download = 'effusion.png'><button type="button" class="btn btn-secondary btn-lg btn-block">Download Sample Images</button> </a>
+                </p>
+
+            </div>
+        </div>
+
+</div>
+
+
+<div class="container mb-4" >
+        <div class="row">
+
+            <div class="col mr-5" ><img height= '270'  src="static/scheme2a.png"/>
+            </div>
+
+            <div class="col mt-4">
+                <h1 class = 'mb-4'>Batch Processing</h1>
+                <p class = 'mt-4'>
+                <a href="{{url_for('multiple_images_handler_beta') }}"> <button type="button" class="btn btn btn-primary btn-lg btn-block">Try Our Batch Analysis!</button> </a></p>
+                <p class="text-muted mb-0">Don't have images yet?
+                <p><a href= "static/sample_images_for_downloading/batch_25.zip" download = 'sample_batch.zip'><button type="button" class="btn btn-secondary btn-lg btn-block">Download Sample Images</button></a>
+                </p>
+            </div>
+        </div>
+<hr>
+
+</div>
+
+    <div class = "container mb-5" >
+        <ol class>
+            <li> The best result in binary/multiple classification is published by Rajpurkar et al(2017). See Rajpurkar, Pranav, et al. "Chexnet: Radiologist-level pneumonia detection on chest x-rays with deep learning." arXiv preprint arXiv:1711.05225 (2017). After a few modifications, our algorithm outperforms Rajpurkar's in three categories.</li>
+            <li>The gradient-weighted class activation map is implemented based on the paper by Ramprasaath et al (2016). This method utilizes backprop gradients as weights and yields more informative localization. See Selvaraju, Ramprasaath R., et al. "Grad-CAM: Visual Explanations from Deep Networks via Gradient-Based Localization." ICCV. 2017.</li>
+            <li>GPU: graphical processing unit. Highly recommended for optimal speed.</li>
+            <li>Images will be deleted after running the algorithm.</li>
+        </ol>
+    </div>
+
+{% endblock content %}
+

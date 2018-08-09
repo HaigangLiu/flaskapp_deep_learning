@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class = 'container'>
+<div class = 'row'>
+    <div class = 'col-6 mr-4'>
+    <BIG>
+        <h1>Analyze Multiple Images</h1>
+    <hr>
+            <ul>
+                <li>Input images have to be compressed in a zip file,
+                and that's currently the only accepted format.</li>
+
+                <li>The algorithm will estimate the number of positive cases
+                 for each category. A detailed look of heatmap will also be
+             generated for each image.</li>
+
+                <li>Usage of GPU is strongly recommeded in this use case (as
+                opposed to single image case) to accelarate computation. As a reference,
+                 our test shows that a 6 gen quad core i7 can only process about 10,000
+             image per hour on a CPU-only platform. </li>
+            </ul>
+    </BIG>
+    </div>
+    <div class = 'ml-4 col-4 border'>
+        <form method=post enctype=multipart/form-data action="">
+            {{ form.hidden_tag()}}
+            <fieldset class="form-group ">
+                <div class="mt-4 form-group">
+                    {{ form.image.label(class ='form-control-label ml-3') }}
+                    {{form.image(class="form-control-file form-control-lg")}}
+                </div>
+
+            <div class="mr-4 ml-3 form-group">
+                {{ form.model_selection.label(class="form-control-label") }}
+                {{form.model_selection(class="form-control-file form-control-lg")}}
+            </div>
+
+            <div class="mr-4 ml-3 form-group">
+                {{ form.threshold.label(class="form-control-label") }}
+                {{form.threshold(class="form-control-file form-control-lg")}}
+            </div>
+
+        </fieldset>
+            <div class="form-group ml-3">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+{% endblock content %}

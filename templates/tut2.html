@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class = 'container mb-4'>
+
+<h1 class = 'display-4 mb-4'>{{title}} </h1>
+
+We are going to showcase how to build a simple CNN. The data are hand-written digits (MNIST), whose size are 1x32x32. The model structure is three convolution layers followed by two fully connected layer. This architecture is also referred as LeNet since it was proposed LeCunn (1998).
+
+<div class="mb-3"><img class="mt-3 border" src="https://pythonzeal.files.wordpress.com/2018/06/architecture-of-cnn-by-lecun-et-al-lenet-5.png" alt="Architecture-of-CNN-by-LeCun-et-al-LeNet-5.png" width="850" height="214" />
+</div>
+
+
+The resolution of this image is 1x32x32, a 32x32 image with only grey scale. If an image is RGB, there would be three channels. When applying an existing network architecture to our own image, figuring out the original resolution is usually the priority.
+
+Here is a brief explanation of what is going on in these five layers:
+<ul>
+    <li>L1: Convolution Layer. The filter size/receptive field is 5x5, and thus the output layer is  (32 - 5 + 0)/1 + 1 = 28. 32 is the image size, 5 is the filter, 0 is padding, and stride is 1. (filter depth = 6)</li>
+    <li>L2: Convolution Layer. Note that before this layer, actually a max pooling layer is applied and the dimension is halved (14 x 14 x 6). Apply the convolution layer gives the new dimension (14 -5  +1 = 16).</li>
+    <li>L3: Convolution Layer. Identical to what happened before. Max pooling -> 5 x 5 x 10, followed by and conv layer -> 5 - 5  + 1. Hence, the output is now 1 x 1 x 120.</li>
+    <li>L4: Fully connected layer. The dimension in is 120 , and the dimension out is 84.</li>
+    <li>L5: Fully connected layer. The dimension is further shrunken to match the output.</li>
+</ul>
+The design principle is usually to transform a flat and wide structure into a deep but narrow shape. The depth sometimes is not always increasing in modern network architectures since the network would grow into something intractable that way.
+
+A quick tip of layer counting: We only keep track of the layer with parameters. In fact, the architecture also includes ReLU layers (activation layer, tanh function was used in the original paper) and pooling layers but we simply ignore them and call this structure LeNet 5 (3 Conv and 2 fully connected layers). The following code is a Pytorch implementation of this framework.
+<pre class = 'mt-4'>import torch.nn as nn
+
+class LeNet5(nn.Module):
+
+    def __init__(self):
+        super(LeNet5, self).__init__()
+
+        self.convnet = nn.Sequential(
+            nn.Conv2d(1, 6, kernel_size=(5, 5)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=2),
+            nn.Conv2d(6, 16, kernel_size=(5, 5)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=2),
+            nn.Conv2d(16, 120, kernel_size=(5, 5)),
+            nn.ReLU()
+            )
+
+        self.fc = nn.Sequential(
+            nn.Linear(in_features=120, out_features=84),
+            nn.ReLU(),
+            nn.Linear(in_features=84, out_features=10),
+            nn.LogSoftmax()
+            )
+
+    def forward(self, img):
+        output = self.convnet(img)
+        output = output.view(-1, 120)
+        output = self.fc(output)
+    return output
+
+model = LeNet().to(device)</pre>
+There are several different ways to implement this, but I find this way the most enjoyable to read. Let me explain.
+<ol>
+    <li>Sequential block is better than scattered. It just looks better.</li>
+    <li>It would be great if one sequential block can do it but dimension matching would be a problem. The output from conv layers is usually like a cube shape (2x2x120), but the input expected by the fully connected layer is, unfortunately, only a long 1D vector. Hence, a necessary operation is flattening the "cube" tensor to a dimension like (1, 480), where the first argument is subject to change if a mini-batch update scheme is used. <code>output.view(-1, 120)</code> helps us with the dimension matching, and is relatively easy to use but still, separates the two sequential blocks.</li>
+    <li>I see someone treat ReLU just like a function and thus not define it in the <code>__init__ </code>method at all. I see no reason to justify doing so. The principle should be: keep the <code>forward</code> method as minimal as possible. That method is only about how the tensor flows between sequential blocks. Anything more than that is bad.</li>
+    <li>The only drawback in this code chunk is no names for each layer, and you'll only see layer0, layer1 when printing out the model architecture. One can pass in a <code>OrderedDict</code> to fix this.</li>
+</ol>
+By the way, there is another code style to define layers which almost as good:
+<pre class = 'mt-4'> self.fc = torch.nn.Sequential()
+ self.fc.add_module("fc1", torch.nn.Linear(320, 50))
+</pre>
+I am not against this way but when you have lots of layers and lots of <code>add_module</code> functions, it looks keras-ish. Sad.
+
+Here's the accuracy plot from training set and validation set. The red line comes from training set and the test set produces the blue line. Looks fine.
+
+<div class="col mb-3 " ><img class="  wp-image-31 aligncenter" src="https://pythonzeal.files.wordpress.com/2018/06/screen-shot-2018-06-23-at-10-55-41-am.png" alt="Screen Shot 2018-06-23 at 10.55.41 AM.png" width="335" height="249" />
+</div>
+
+There is a bunch other things needs to be considered in order to make this model work, but let's leave it for another post.
+
+</div>
+
+{% endblock content %}

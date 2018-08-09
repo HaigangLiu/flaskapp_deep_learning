@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class = 'container mb-4'>
+<h1 class = 'display-4 mb-4'>{{title}} </h1>
+
+ReLU, Rectified Linear Unit, is the most popular activation function in deep learning as of 2018. The ReLU layer is only activated when you pass in some positive numbers, which is a well-know fact and solves the saturated neuron problem. It works like this
+
+<strong>w = </strong>[1, 2, -3, 0, 1] --> (relu layer)  --> [1, 2, 0, 0, 1]
+
+Simple enough, but what is going to happen during backpropagation?
+
+The answer is the gradient will only pass through the positive locations in the forward pass. In other words, if
+
+<strong>dw = </strong>[-0.1, 0.2, 0.1, 0, 0.1],
+
+only the first, second and the last element of the list will be passed, and other gradient, whatever they are, will be set as zero and will have no further impact.
+
+So in a typical backprop operation, we do not care what gradient got passed, including -0.1 in our example. However, sometimes we do not want this to happen since we are only interested in what image feature the neuron detects, but not what kind it doesn't. Thus, we do not want to pass on -0.1 in this case. By doing so, we created a different type of propagation which is usually refered as guided propagation.
+
+The following is a nice graph to demonstrate this. Note that red one should be omitted since that's how backprop works on ReLU, and yellow cells are ignored since guided propagation is desirable.
+
+<div class = 'row'>
+    <div class = 'col'></div>
+    <div class='mb-4'>
+    <img class=" border mt-4  wp-image-35 aligncenter" src="https://pythonzeal.files.wordpress.com/2018/06/screen-shot-2018-06-24-at-11-40-11-am.png" alt="Screen Shot 2018-06-24 at 11.40.11 AM.png" width="433" height="468" />
+    </div>
+    <div class = 'col'></div>
+</div>
+
+
+
+<h2>ReLU implementation in PyTorch</h2>
+The nice thing about PyTorch is that it's highly customizable. For the most common tasks, there is usually an out-of-the-box solution, like ReLU, sigmoid, or even some rather complex model setups. However, you can easily extend the Pytorch module and add some new functionality by subclassing a certain module.
+
+The following code snippet is the original ReLU class:
+<pre class='mt-4'><span class="k">class</span> <span class="nc">MyReLU</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    We can implement our own custom autograd Functions by subclassing</span>
+<span class="sd">    torch.autograd.Function and implementing the forward and backward passes</span>
+<span class="sd">    which operate on Tensors.</span>
+<span class="sd">    """</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        In the forward pass we receive a Tensor containing the input and return</span>
+<span class="sd">        a Tensor containing the output. ctx is a context object that can be used</span>
+<span class="sd">        to stash information for backward computation. You can cache arbitrary</span>
+<span class="sd">        objects for use in the backward pass using the ctx.save_for_backward method.</span>
+<span class="sd">        """</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">save_for_backward</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        In the backward pass we receive a Tensor containing the gradient of the loss</span>
+<span class="sd">        with respect to the output, and we need to compute the gradient of the loss</span>
+<span class="sd">        with respect to the input.</span>
+<span class="sd">        """</span>
+        <span class="nb">input</span><span class="p">,</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">saved_tensors</span>
+        <span class="n">grad_input</span> <span class="o">=</span> <span class="n">grad_output</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"grad_input: "</span><span class="p">,</span><span class="n">grad_input</span><span class="p">)</span>
+        <span class="n">grad_input</span><span class="p">[</span><span class="nb">input</span> <span class="o"><</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">grad_input</span>
+
+<span class="n">my_relu</span> <span class="o">=</span> <span class="n">MyReLU</span><span class="o">.</span><span class="n">apply</span></pre>
+The logic is pretty clear <code>grad_input[input < 0] = 0</code> makes sure that negative input will not receive no gradients and this is how the ReLU layer works. And adding one simple line would do it for us:<code>grad_input[grad_input < 0] = 0</code> which means we also have to make sure the gradient itself is positive as well. Here is the complete solution with comments removed.
+<pre class = 'mt-4'><span class="k">class</span> <span class="nc">GuidedBackpropRelU</span><span class="p">(<span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">Function</span></span><span class="p">):</span>
+
+<span class="nd">    @staticmethod</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="nb">input</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">save_for_backward</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span><span class="n">grad_output</span><span class="p">):</span>
+        <span class="nb">input</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">saved_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">grad_input</span> <span class="o">=</span> <span class="n">grad_output</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+
+        <span class="n">grad_input</span><span class="p">[</span><span class="n">grad_input</span><span class="o"><</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">grad_input</span><span class="p">[</span><span class="nb">input</span><span class="o"><</span><span class="mi">0</span><span class="p">] </span><span class="o">= </span><span class="mi">0</span>
+        <span class="k">return</span> <span class="n">grad_input</span>
+
+<span class="n">guided_backprop_relu</span> <span class="o">=</span> <span class="n">GuidedBackpropRelu</span><span class="o">.</span><span class="n">apply</span></pre>
+ {% endblock content %}

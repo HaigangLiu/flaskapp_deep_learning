@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class = 'container'>
+<h1 class = 'display-4 mb-4'>{{title}} </h1>
+
+As a statistician, I am pretty obsessed with regression. And that's why even with Neural Network framework, I am still going to build a regression model as a test run.
+<pre class = 'mt-4'>import torch
+x = torch.linspace(0, 1, 1000)
+</pre>
+Pytorch syntax is obviously inspired by numpy. However, Pytorch does not support one-dimensional vectors as training data. For instance, a simple model with data structure
+<pre class = 'mt-4'>y = wx + b, x = [1.3,1.2,3.4], y = [1.0,3.7,1.9]</pre>
+should work at least conceptually, but it does not because a 2-D data structure is required. In other words, the dimension of matrix in operation must be [3,1]. Thus, a handy function <code>.unsqueeze()</code> was created to deal with this hassle. And you guessed it, you can get back to a 1-D vector by <code>.squeeze()</code>.  By the way, if you want to make the change on-the-fly without defining a new variable, use <code>unsqueeze_()</code>.
+<pre class = 'mt-4'>x_train = x.unsqueeze(dim = 1)
+y_train = torch.normal(x_train, std = 1)
+
+x_test = x.unsqueeze(dim = 1)
+y_test = torch.normal(x_train, std = 1)</pre>
+This is a classic statistics model: conditioning on the known values of X as mean, Y is generated from a normal distribution with standard deviation 1. You can assign different variances by passing in a vector.
+<pre class = 'mt-4'>class RegressionModel(torch.nn.Module):
+
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
+        self.linear_reg = torch.nn.Linear(in_dim, out_dim)
+
+    def forward(self, x):
+        x = self.linear_reg(x)
+        return x
+
+model_1 = RegressionModel(1,1)</pre>
+<code>RegressionModel</code> is a customized class inherited from <code>torch.nn.Module</code>. And that is why you see something like <code>super()</code>, which is used to inherit the <code>__init__()</code> method from the <code>nn.Module</code>. Think this as a template: the first<code>__init__() </code>method  is to define all the building blocks/models/neural layers, and the second chunk is to define the way to pass tensors forward. And using frameworks like this saves us from deriving the backwards propagation, which, to be honest, I do not think I am fully capable of. <em> </em>
+
+One can use this aforementioned template to build really complex models, but this is definitely an overkill for a simple linear regression. There must be a better way. This is a one-liner with <code>Sequential</code> function. These two models are identical functionally.
+<pre class = 'mt-4'>model_2 = torch.nn.Sequential(torch.nn.Linear(1,1))</pre>
+You might have heard there are different optimizers in the wild, but long story short Adam is the one everyone loves. It is essentially a combination of the idea of momentum and the idea of adaptive gradient. MSE loss is used because this is a regression problem, and one should consider cross entropy loss if it's a classification problem.
+<pre class = 'mt-4'>optimizer = torch.optim.Adam(model_2.parameters(), lr = 0.001)
+loss_func = torch.nn.MSELoss()
+
+num_epoch = 10000
+for epoch in range(num_epoch):
+    pred = model_2(x_train)
+    loss = loss_func(pred, y_train)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()</pre>
+This is it! Pytorch exactly reflects how the neural network works conceptually. <code>optimizer.zero_grad()</code> means zero all the gradient info to have a clean slate to start with. <code>loss.backward()</code> means applying a back-propagation, and <code>optimizer.step()</code> means implementing the gradient descent step for parameters. A word about the mechanism under the hood: the computation graph is created and destroyed immediately in one update, and that's how the dynamic computation graph works.
+
+So where is the result?
+<pre class = 'mt-4'>model_2.state_dict()
+
+> OrderedDict([('0.weight', tensor([[ 0.9759]])), ('0.bias', tensor(1.00000e-02 *
+ [ 5.5842]))])</pre>
+Is this consistent with our good old OLS? Let's check it out.
+<pre class = 'mt-4'>from sklearn.linear_model import LinearRegression
+
+linear_model_test = LinearRegression()
+linear_model_test.fit(x_train, y_train)
+print(linear_model_test.coef_)
+
+> [[0.97594035]]</pre>
+The result is same. Problem solved. I am kind of surprised that we can use torch data structure directly without converting it to numpy arrays before feeding it to sklearn. The world is becoming a better place.
+
+The last topic is about training and test set. The way to switch train and test phase is by <code> model.train() </code> and <code>model.eval()</code>. We need to switch mode because we do not want to do back-propagation with validation data.
+
+The reason we want to compare the losses across training data and validation is to avoid over-fitting. Long story short, the two losses should be as close as possible, and both should be going down during training. It is not a real concern here because you cannot overfit a linear model, but let's take a look anyway. The red line is training loss, and the blue one is the validation loss.
+
+<div class="col mb-2" ><img height= '270'  src="https://pythonzeal.files.wordpress.com/2018/06/screen-shot-2018-06-22-at-5-32-30-pm.png"/>
+</div>
+
+To wrap up this article, here is the code to generate the figure above:
+
+<pre class = 'mt-4'>train_loss = []
+test_loss = []
+
+for i in range(10000):
+
+    model_1.train()
+
+    prediction = model_1(x_train)
+    loss = loss_func(prediction, y_train)
+    train_loss.append(loss)
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    model_1.eval()
+
+    prediction = model_1(x_test)
+    loss_eval = loss_func(prediction, y_test)
+    test_loss.append(loss_eval)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set_style('ticks')
+sns.set_style('whitegrid')
+
+plt.plot(range(10000), train_loss, "r")
+plt.plot(range(10000), test_loss, "b")</pre>
+</div>
+{% endblock content %}
