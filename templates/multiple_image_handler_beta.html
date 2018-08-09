@@ -13,7 +13,7 @@
 
                 <li>The algorithm will estimate the number of positive cases
                  for each category. A detailed look of heatmap will also be
-             generated for each image.</li>
+             generated for each image. Threshold is used to determine whether a case is positive or negative. </li>
 
                 <li>Usage of GPU is strongly recommeded in this use case (as
                 opposed to single image case) to accelarate computation. As a reference,
@@ -27,8 +27,17 @@
             {{ form.hidden_tag()}}
             <fieldset class="form-group ">
                 <div class="mt-4 form-group">
-                    {{ form.image.label(class ='form-control-label ml-3') }}
-                    {{form.image(class="form-control-file form-control-lg")}}
+                  {{ form.image.label(class="form-control-label") }}
+                    {% if form.image.errors %}
+                        {{ form.image(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.image.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{form.image(class="form-control form-control-lg")}}
+                    {% endif %}
                 </div>
 
             <div class="mr-4 ml-3 form-group">
