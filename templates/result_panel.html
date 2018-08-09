@@ -10,7 +10,7 @@
         <p>
             <b>File name: {{ post.fileName }} </b>
         </p>
-        <img height= '250'  src = {{post.relativePath}} class = 'border' />
+        <img height= '250' width='500'  src = {{post.relativePath}} class = 'border' />
         <p > The three most likely categories are {{post.First}} ({{post.ProbFirst}}), {{post.Second}} ({{post.ProbSecond}}) and {{post.Third}} ({{post.ProbThird}}).
         </p>
 
@@ -21,14 +21,17 @@
 </div>
 
  <div class="container mb-4">
-    {% for page_num in posts.iter_pages(left_edge = 1, right_edge = 1, left_current = 1, right_current = 2) %}
+    {% for page_num in posts.iter_pages(left_edge = 1, right_edge = 1,
+        left_current = 3, right_current = 3) %}
 
         {%if page_num %}
             {% if posts.page == page_num %}
-            <a class = 'btn btn-info' href= {{url_for('to_panel', page = page_num) }}>{{page_num}}</a>
+            <a class = 'btn btn-info' href= {{url_for('to_panel',
+             page = page_num) }}>{{page_num}}</a>
 
             {% else %}
-            <a class = 'btn btn-outline-info' href= {{url_for('to_panel', page = page_num) }}>{{page_num}}</a>
+            <a class = 'btn btn-outline-info'
+            href= {{url_for('to_panel', page = page_num) }}>{{page_num}}</a>
             {% endif %}
         {% else %}
         ...
