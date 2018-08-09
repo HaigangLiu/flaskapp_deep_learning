@@ -3,7 +3,9 @@
     <div class = 'container'>
 <h1 class = 'mb-4'>Report of Findings</h1>
 <p> <BIG>
-The following table gives the ROC score for all of 14 categories based on the dataset that has been provided to us. We also provided some published work and our own test result based on the NIH dataset, which can be used as a reference line.
+
+This is a summary of the performance of our models compared to the state-of-the-art results from published work. The model is trained as multilabel classification algorithm on the public NIH dataset. For more info about this dataset, please consult Wang et al. (2016).
+
 </BIG></p>
 <div class="table">
 <table>
@@ -14,7 +16,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <th>Rajpurkar el al. (2017)</th>
 <th style="text-align: left">Our Model (DenseNet)</th>
 <th style="text-align: left">Our Model (InceptionV3)</th>
-<th style="text-align: left">New Data</th>
 </tr>
 </thead>
 
@@ -25,7 +26,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.809</td>
 <td style="text-align: left">0.805</td>
 <td style="text-align: left">0.815</td>
-<td style="text-align: left">{{list_of_aurocs[0]}}</td>
 </tr>
 <tr>
 <td>Cardiomegaly</td>
@@ -33,7 +33,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.925</td>
 <td style="text-align: left">0.906</td>
 <td style="text-align: left">0.878</td>
-<td style="text-align: left">{{list_of_aurocs[1]}}</td>
 </tr>
 <tr>
 <td>Effusion</td>
@@ -41,7 +40,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.864</td>
 <td style="text-align: left">0.883</td>
 <td style="text-align: left">0.892</td>
-<td style="text-align: left">{{list_of_aurocs[2]}}</td>
 </tr>
 <tr>
 <td>Infiltrate</td>
@@ -49,7 +47,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.735</td>
 <td style="text-align: left">0.703</td>
 <td style="text-align: left">0.731</td>
-<td style="text-align: left">{{list_of_aurocs[3]}}</td>
 </tr>
 <tr>
 <td>Mass</td>
@@ -57,7 +54,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.868</td>
 <td style="text-align: left">0.840</td>
 <td style="text-align: left">0.848</td>
-<td style="text-align: left">{{list_of_aurocs[4]}}</td>
 </tr>
 <tr>
 <td>Nodule</td>
@@ -65,7 +61,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.780</td>
 <td style="text-align: left">0.754</td>
 <td style="text-align: left">0.731</td>
-<td style="text-align: left">{{list_of_aurocs[5]}}</td>
 </tr>
 <tr>
 <td>Pneumonia</td>
@@ -73,7 +68,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.768</td>
 <td style="text-align: left">0.763</td>
 <td style="text-align: left">0.785</td>
-<td style="text-align: left">{{list_of_aurocs[6]}}</td>
 </tr>
 <tr>
 <td>Pneumothorax</td>
@@ -81,7 +75,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.888</td>
 <td style="text-align: left">0.866</td>
 <td style="text-align: left">0.903</td>
-<td style="text-align: left">{{list_of_aurocs[7]}}</td>
 </tr>
 <tr>
 <td>Consolidation</td>
@@ -89,7 +82,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.790</td>
 <td style="text-align: left">0.799</td>
 <td style="text-align: left">0.729</td>
-<td style="text-align: left">{{list_of_aurocs[8]}}</td>
 </tr>
 <tr>
 <td>Edema</td>
@@ -97,7 +89,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.887</td>
 <td style="text-align: left">0.888</td>
 <td style="text-align: left">0.893</td>
-<td style="text-align: left">{{list_of_aurocs[9]}}</td>
 </tr>
 <tr>
 <td>Emphysema</td>
@@ -105,7 +96,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.937</td>
 <td style="text-align: left">0.902</td>
 <td style="text-align: left">0.934</td>
-<td style="text-align: left">{{list_of_aurocs[10]}}</td>
 </tr>
 <tr>
 <td>Fibrosis</td>
@@ -113,7 +103,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.804</td>
 <td style="text-align: left">0.817</td>
 <td style="text-align: left">0.749</td>
-<td style="text-align: left">{{list_of_aurocs[11]}}</td>
 </tr>
 <tr>
 <td>Pleural Thickening</td>
@@ -121,7 +110,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.806</td>
 <td style="text-align: left">0.767</td>
 <td style="text-align: left">0.784</td>
-<td style="text-align: left">{{list_of_aurocs[12]}}</td>
 </tr>
 <tr>
 <td>Hernia</td>
@@ -129,7 +117,6 @@ The following table gives the ROC score for all of 14 categories based on the da
 <td>0.916</td>
 <td style="text-align: left">0.905</td>
 <td style="text-align: left">0.802</td>
-<td style="text-align: left">{{list_of_aurocs[13]}}</td>
 </tr>
 </tbody>
 </table>
