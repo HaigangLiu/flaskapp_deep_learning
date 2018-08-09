@@ -2,31 +2,33 @@
 
 {% block content %}
 <div class = 'container'>
-<div class = 'row'>
-    <div class = 'col-6 mr-4'>
-    <BIG>
-        <h1>Analyze Multiple Images</h1>
-    <hr>
+        <div class ='row'>
+
+            <div class ='col-3'></div>
+        <div class ='col-6 mr-4 border'>
+
+        <BIG>
+        <h1 class = 'mt-3 mb-4 text-center'>Analyze Multiple Images</h1>
+
             <ul>
-                <li>Input images have to be compressed in a zip file,
+                <li class = 'mt-3'>Input images have to be compressed in a zip file,
                 and that's currently the only accepted format.</li>
 
-                <li>The algorithm will estimate the number of positive cases
-                 for each category. A detailed look of heatmap will also be
-             generated for each image. Threshold is used to determine whether a case is positive or negative. </li>
+                <li class = 'mt-3'>The algorithm will estimate the number of positive cases
+                 for each category. Threshold is used to determine whether a case is positive or negative based on a probability prediction. A panel of heatmaps for each image will also be
+             generated.</li>
 
-                <li>Usage of GPU is strongly recommeded in this use case (as
+                <li class = 'mt-3'>Usage of GPU is strongly recommeded in this use case (as
                 opposed to single image case) to accelarate computation. As a reference,
                  our test shows that a 6 gen quad core i7 can only process about 10,000
              image per hour on a CPU-only platform. </li>
             </ul>
-    </BIG>
-    </div>
-    <div class = 'ml-4 col-4 border'>
+        </BIG>
+
         <form method=post enctype=multipart/form-data action="">
             {{ form.hidden_tag()}}
-            <fieldset class="form-group ">
-                <div class="mt-4 form-group">
+            <fieldset class="form-group">
+                <div  class="mr-4 ml-3 mt-4 form-group">
                   {{ form.image.label(class="form-control-label") }}
                     {% if form.image.errors %}
                         {{ form.image(class="form-control form-control-lg is-invalid") }}
@@ -51,12 +53,19 @@
             </div>
 
         </fieldset>
-            <div class="form-group ml-3">
-                {{ form.submit(class="btn btn-outline-info") }}
+            <div class="form-group mr-4 ml-3 mt-4 ">
+                {{ form.submit(class="btn btn-outline-info btn-block") }}
             </div>
         </form>
     </div>
+
+
+
+    <div class ='col'></div>
+
+
+    </div>
 </div>
-</div>
+
 
 {% endblock content %}
